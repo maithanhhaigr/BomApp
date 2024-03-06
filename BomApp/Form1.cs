@@ -79,7 +79,7 @@ namespace BomApp
                         //2. Writedata
 
                         worksheet.Cells[1, 12].Value = "Quantity";
-                        worksheet.Cells[1, 13].Value = "IsMaterial";
+                        //worksheet.Cells[1, 13].Value = "IsMaterial";
                         //worksheet.Cells[1, 14].Value = "IsWelding";
 
                         row = 1;
@@ -90,9 +90,10 @@ namespace BomApp
                             int CountChild = 0;
                             int? Quantity = 0;
                             int IsMaterial = 0;
-                            //int IsWelding = 0;
+                            int IsWelding = 0;
 
                             string Item = worksheet.Cells[row, 1].Value?.ToString();
+                            string Category = worksheet.Cells[row, 3].Value?.ToString();
                             string QTY = worksheet.Cells[row, 7].Value?.ToString();
 
                             if (string.IsNullOrEmpty(Item)) { start = false; break; }
@@ -102,11 +103,22 @@ namespace BomApp
                                 pItem = Item.Substring(0, Item.LastIndexOf('.'));
 
                             if (pItem == Item)
+                            {
                                 Quantity = int.Parse(QTY);
+                                if (Category.ToUpper() == "HÀN")
+                                    IsWelding = 1;
+                            }
                             else
                             {
                                 var tmpItem = data.Where(x => x.Item == pItem).FirstOrDefault();
                                 Quantity = int.Parse(QTY) * tmpItem.Quantity;
+
+                                if (Category.ToUpper() == "HÀN")
+                                    IsWelding = 1;
+                                else if (tmpItem.Category.ToUpper() == "HÀN")
+                                    IsWelding = 1;
+                                else
+                                    IsWelding = 0;
                             }
 
                             CountChild = data.Where(x => x.Item.StartsWith(Item + ".")).Count();
@@ -118,9 +130,11 @@ namespace BomApp
                             var t = data.Where(x => x.Item == Item).FirstOrDefault();
                             t.Quantity = Quantity;
                             t.IsMaterial = IsMaterial;
+                            t.IsWelding = IsWelding;
 
                             worksheet.Cells[row, 12].Value = Quantity;
-                            worksheet.Cells[row, 13].Value = IsMaterial;
+                            //worksheet.Cells[row, 13].Value = IsMaterial;
+                            //worksheet.Cells[row, 14].Value = IsWelding;
                         }
 
                         //II. Material
@@ -128,7 +142,7 @@ namespace BomApp
                         //var worksheet2 = package.Workbook.Worksheets["Sheet2"];
 
                         var tmpMaterial = (from t1 in data
-                                           where t1.IsMaterial == 1
+                                           where t1.IsMaterial == 1 && t1.IsWelding == 0
                                            group t1 by new { t1.PartNumber, t1.Category, t1.Company } into x1
                                            select new VttbGroupModel
                                            {
@@ -140,17 +154,49 @@ namespace BomApp
                                            .ToList();
 
                         row = 1;
-                        worksheet2.Cells[row, 1].Value = "PartNumber";
-                        worksheet2.Cells[row, 2].Value = "Category";
-                        worksheet2.Cells[row, 3].Value = "Company";
-                        worksheet2.Cells[row, 4].Value = "Quantity";
+                        worksheet2.Cells[row, 1].Value = "Item";
+                        worksheet2.Cells[row, 2].Value = "Title";
+                        worksheet2.Cells[row, 3].Value = "PartNumber";
+                        worksheet2.Cells[row, 4].Value = "Category";
+                        worksheet2.Cells[row, 5].Value = "Company";
+                        worksheet2.Cells[row, 6].Value = "Quantity";
                         foreach (var item in tmpMaterial)
                         {
                             row++;
-                            worksheet2.Cells[row, 1].Value = item.PartNumber;
-                            worksheet2.Cells[row, 2].Value = item.Category;
-                            worksheet2.Cells[row, 3].Value = item.Company;
-                            worksheet2.Cells[row, 4].Value = item.Quantity;
+                            worksheet2.Cells[row, 3].Value = item.PartNumber;
+                            worksheet2.Cells[row, 4].Value = item.Category;
+                            worksheet2.Cells[row, 5].Value = item.Company;
+                            worksheet2.Cells[row, 6].Value = item.Quantity;
+                        }
+
+                        //III. Welding
+                        var worksheet3 = package.Workbook.Worksheets.Add("Sheet3");
+                        //var worksheet3 = package.Workbook.Worksheets["Sheet3"];
+
+                        var tmpWelding = (from t in data
+                                          where t.IsWelding == 1
+                                          select t).ToList();
+
+                        row = 1;
+                        worksheet3.Cells[row, 1].Value = "Item";
+                        worksheet3.Cells[row, 2].Value = "Title";
+                        worksheet3.Cells[row, 3].Value = "Category";
+                        worksheet3.Cells[row, 4].Value = "PartNumber";
+                        worksheet3.Cells[row, 5].Value = "Subject";
+                        worksheet3.Cells[row, 6].Value = "Manager";
+                        worksheet3.Cells[row, 7].Value = "QTY";
+                        worksheet3.Cells[row, 8].Value = "Quantity";
+                        foreach (var item in tmpWelding)
+                        {
+                            row++;
+                            worksheet3.Cells[row, 1].Value = item.Item;
+                            worksheet3.Cells[row, 2].Value = item.Title;
+                            worksheet3.Cells[row, 3].Value = item.Category;
+                            worksheet3.Cells[row, 4].Value = item.PartNumber;
+                            worksheet3.Cells[row, 5].Value = item.Subject;
+                            worksheet3.Cells[row, 6].Value = item.Manager;
+                            worksheet3.Cells[row, 7].Value = item.QTY;
+                            worksheet3.Cells[row, 8].Value = item.Quantity;
                         }
 
                         package.Save();

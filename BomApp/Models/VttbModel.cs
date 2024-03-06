@@ -22,7 +22,7 @@ namespace BomApp.Models
 
         public int? Quantity { get; set; }
         public int? IsMaterial { get; set; }
-        //public int? IsWelding { get; set; }
+        public int? IsWelding { get; set; }
 
         //public int Id { get; set; }
     }
