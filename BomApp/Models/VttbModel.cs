@@ -29,6 +29,7 @@ namespace BomApp.Models
 
     public class VttbGroupModel
     {
+        public string Title { get; set; }
         public string PartNumber { get; set; }
         public string Category { get; set; }
         public string Company { get; set; }

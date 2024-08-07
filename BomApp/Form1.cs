@@ -22,6 +22,7 @@ namespace BomApp
 
         private void button1_Click(object sender, EventArgs e)
         {
+            string _item = "";
             try
             {
                 label1.Text = "Starting...";
@@ -111,11 +112,12 @@ namespace BomApp
                             else
                             {
                                 var tmpItem = data.Where(x => x.Item == pItem).FirstOrDefault();
-                                Quantity = int.Parse(QTY) * tmpItem.Quantity;
+
+                                Quantity = int.Parse(QTY) * tmpItem?.Quantity;
 
                                 if (Category.ToUpper() == "HÀN")
                                     IsWelding = 1;
-                                else if (tmpItem.Category.ToUpper() == "HÀN")
+                                else if (tmpItem?.Category.ToUpper() == "HÀN")
                                     IsWelding = 1;
                                 else
                                     IsWelding = 0;
@@ -143,9 +145,10 @@ namespace BomApp
 
                         var tmpMaterial = (from t1 in data
                                            where t1.IsMaterial == 1 && t1.IsWelding == 0
-                                           group t1 by new { t1.PartNumber, t1.Category, t1.Company } into x1
+                                           group t1 by new { t1.Title, t1.PartNumber, t1.Category, t1.Company } into x1
                                            select new VttbGroupModel
                                            {
+                                               Title = x1.Key.Title,
                                                PartNumber = x1.Key.PartNumber,
                                                Category = x1.Key.Category,
                                                Company = x1.Key.Company,
@@ -163,6 +166,7 @@ namespace BomApp
                         foreach (var item in tmpMaterial)
                         {
                             row++;
+                            worksheet2.Cells[row, 2].Value = item.Title;
                             worksheet2.Cells[row, 3].Value = item.PartNumber;
                             worksheet2.Cells[row, 4].Value = item.Category;
                             worksheet2.Cells[row, 5].Value = item.Company;
@@ -205,7 +209,7 @@ namespace BomApp
                     label1.Text = "Finished";
                 }
             }
-            catch (Exception ex) { label1.Text = ex.Message; }
+            catch (Exception ex) { label1.Text = "Error item " + _item + ": " + ex.Message; }
         }
     }
 }
