@@ -139,69 +139,29 @@ namespace BomApp
                             //worksheet.Cells[row, 14].Value = IsWelding;
                         }
 
-                        //II. Material
-                        var worksheet2 = package.Workbook.Worksheets.Add("Sheet2");
-                        //var worksheet2 = package.Workbook.Worksheets["Sheet2"];
+                        //II. DMVT
+                        var dmvt = package.Workbook.Worksheets["DMVT"];
+                        if (dmvt != null) package.Workbook.Worksheets.Delete("DMVT");
+                        var wsDMVT = package.Workbook.Worksheets.Add("DMVT");
+                        CreateSheetDMVT(wsDMVT, data);
 
-                        var tmpMaterial = (from t1 in data
-                                           where t1.IsMaterial == 1 && t1.IsWelding == 0
-                                           group t1 by new { t1.Title, t1.PartNumber, t1.Category, t1.Company } into x1
-                                           select new VttbGroupModel
-                                           {
-                                               Title = x1.Key.Title,
-                                               PartNumber = x1.Key.PartNumber,
-                                               Category = x1.Key.Category,
-                                               Company = x1.Key.Company,
-                                               Quantity = x1.Sum(z => z.Quantity)
-                                           })
-                                           .ToList();
+                        //III. Material
+                        var thvt = package.Workbook.Worksheets["THVT"];
+                        if (thvt != null) package.Workbook.Worksheets.Delete("THVT");
+                        var wsTHVT = package.Workbook.Worksheets.Add("THVT");
+                        CreateSheetTHVT(wsTHVT, data);
 
-                        row = 1;
-                        worksheet2.Cells[row, 1].Value = "Item";
-                        worksheet2.Cells[row, 2].Value = "Title";
-                        worksheet2.Cells[row, 3].Value = "PartNumber";
-                        worksheet2.Cells[row, 4].Value = "Category";
-                        worksheet2.Cells[row, 5].Value = "Company";
-                        worksheet2.Cells[row, 6].Value = "Quantity";
-                        foreach (var item in tmpMaterial)
-                        {
-                            row++;
-                            worksheet2.Cells[row, 2].Value = item.Title;
-                            worksheet2.Cells[row, 3].Value = item.PartNumber;
-                            worksheet2.Cells[row, 4].Value = item.Category;
-                            worksheet2.Cells[row, 5].Value = item.Company;
-                            worksheet2.Cells[row, 6].Value = item.Quantity;
-                        }
+                        //IV. Welding
+                        var han = package.Workbook.Worksheets["HAN"];
+                        if (han != null) package.Workbook.Worksheets.Delete("HAN");
+                        var wsHAN = package.Workbook.Worksheets.Add("HAN");
+                        CreateSheetHAN(wsHAN, data);
 
-                        //III. Welding
-                        var worksheet3 = package.Workbook.Worksheets.Add("Sheet3");
-                        //var worksheet3 = package.Workbook.Worksheets["Sheet3"];
-
-                        var tmpWelding = (from t in data
-                                          where t.IsWelding == 1
-                                          select t).ToList();
-
-                        row = 1;
-                        worksheet3.Cells[row, 1].Value = "Item";
-                        worksheet3.Cells[row, 2].Value = "Title";
-                        worksheet3.Cells[row, 3].Value = "Category";
-                        worksheet3.Cells[row, 4].Value = "PartNumber";
-                        worksheet3.Cells[row, 5].Value = "Subject";
-                        worksheet3.Cells[row, 6].Value = "Manager";
-                        worksheet3.Cells[row, 7].Value = "QTY";
-                        worksheet3.Cells[row, 8].Value = "Quantity";
-                        foreach (var item in tmpWelding)
-                        {
-                            row++;
-                            worksheet3.Cells[row, 1].Value = item.Item;
-                            worksheet3.Cells[row, 2].Value = item.Title;
-                            worksheet3.Cells[row, 3].Value = item.Category;
-                            worksheet3.Cells[row, 4].Value = item.PartNumber;
-                            worksheet3.Cells[row, 5].Value = item.Subject;
-                            worksheet3.Cells[row, 6].Value = item.Manager;
-                            worksheet3.Cells[row, 7].Value = item.QTY;
-                            worksheet3.Cells[row, 8].Value = item.Quantity;
-                        }
+                        //V. DMP
+                        var dmp = package.Workbook.Worksheets["DMP"];
+                        if (dmp != null) package.Workbook.Worksheets.Delete("DMP");
+                        var wsDMP = package.Workbook.Worksheets.Add("DMP");
+                        CreateSheetDMP(wsDMP, data);
 
                         package.Save();
                     }
@@ -210,6 +170,392 @@ namespace BomApp
                 }
             }
             catch (Exception ex) { label1.Text = "Error item " + _item + ": " + ex.Message; }
+        }
+
+        private void CreateSheetDMVT(ExcelWorksheet worksheet, List<VttbModel> data)
+        {
+            var tmpWelding = (from t in data
+                              select t).ToList();
+
+            var row = 15;
+            worksheet.Cells[row, 1].Value = "STT";
+            worksheet.Cells[row, 2].Value = "TÊN VẬT TƯ";
+            worksheet.Cells[row, 3].Value = "MÃ VẬT TƯ";
+            worksheet.Cells[row, 4].Value = "THÔNG SỐ";
+            worksheet.Cells[row, 5].Value = "ĐV";
+            worksheet.Cells[row, 6].Value = "SỐ LƯỢNG";
+            worksheet.Cells[row, 7].Value = "TỔNG SL";
+            worksheet.Cells[row, 8].Value = "VẬT LIỆU";
+            worksheet.Cells[row, 9].Value = "KHỐI LƯỢNG";
+            worksheet.Cells[row, 10].Value = "HÃNG SX";
+            worksheet.Cells[row, 11].Value = "ĐƠN GIÁ";
+            worksheet.Cells[row, 12].Value = "THÀNH TIỀN";
+            worksheet.Cells[row, 13].Value = "GHI CHÚ";
+
+            //row = 16;
+            //worksheet.Cells[row, 1].Value = "Item";
+            //worksheet.Cells[row, 2].Value = "Title";
+            //worksheet.Cells[row, 3].Value = "PartNumber";
+            //worksheet.Cells[row, 4].Value = "Category";
+            //worksheet.Cells[row, 5].Value = "Manager";
+            //worksheet.Cells[row, 6].Value = "QTY";
+            //worksheet.Cells[row, 7].Value = "";//Quantity
+            //worksheet.Cells[row, 8].Value = "Material";
+            //worksheet.Cells[row, 9].Value = "Mass";
+            //worksheet.Cells[row, 10].Value = "Company";
+
+            foreach (var item in tmpWelding)
+            {
+                row++;
+                worksheet.Cells[row, 1].Value = item.Item;
+                worksheet.Cells[row, 2].Value = item.Title;
+                worksheet.Cells[row, 3].Value = item.PartNumber;
+                worksheet.Cells[row, 4].Value = item.Category;
+                worksheet.Cells[row, 5].Value = item.Manager;
+                worksheet.Cells[row, 6].Value = item.QTY;
+                worksheet.Cells[row, 7].Value = item.Quantity;
+                worksheet.Cells[row, 8].Value = item.Material;
+                worksheet.Cells[row, 9].Value = item.Mass;
+                worksheet.Cells[row, 9].Value = item.Mass;
+                worksheet.Cells[row, 10].Value = item.Company;
+                worksheet.Cells[row, 12].Formula = $"K{row}*G{row}";
+            }
+
+            //Style
+
+            worksheet.Column(1).Width = 6;
+            worksheet.Column(2).Width = 40;
+            worksheet.Column(3).Width = 30;
+            worksheet.Column(4).Width = 20;
+            worksheet.Column(5).Width = 10;
+            worksheet.Column(6).Width = 15;
+            worksheet.Column(7).Width = 15;
+            worksheet.Column(8).Width = 15;
+            worksheet.Column(9).Width = 20;
+            worksheet.Column(10).Width = 12;
+            worksheet.Column(11).Width = 10;
+            worksheet.Column(12).Width = 20;
+            worksheet.Column(13).Width = 10;
+
+            var cells = worksheet.Cells[15, 1, row, 13];
+            cells.Style.Font.Name = "Times New Roman";
+            cells.Style.Font.Size = 12;
+            cells.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
+            cells = worksheet.Cells[15, 1, 15, 13];
+            cells.Style.Font.Bold = true;
+            cells.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            cells.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+
+            //--Title
+
+            var imagePath = "assets\\logo_dmp.jpg";
+            var picture = worksheet.Drawings.AddPicture("MyPicture", imagePath);
+            picture.SetPosition(1, 0, 0, 0); // Dòng 2 (index 1), Cột 1 (index 0)
+            picture.SetSize(250, 100); // Chiều rộng 100px, chiều cao 100px
+
+            worksheet.Cells[2, 1, 6, 13].Merge = true;
+            var cell = worksheet.Cells[2, 1];
+            cell.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+            cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            cell.Style.Font.Name = "Times New Roman";
+            cell.Style.Font.Size = 12;
+
+            cell.Value = null;
+            var text1 = cell.RichText.Add("CÔNG TY TNHH DMP MACHINERY");
+            text1.Bold = true;
+            text1.Size = 20;
+            cell.RichText.Add("\n");
+            var text2 = cell.RichText.Add("Địa chỉ: Số Nhà 25 Ngách 193 / 15 Phố Cầu Cốc, P.Tây Mỗ, Q. Nam Từ Liêm, TP.Hà Nội");
+            text2.Bold = false;
+            text2.Size = 12;
+            cell.RichText.Add("\n");
+            var text3 = cell.RichText.Add("Hotline: 0973992528");
+            text3.Bold = false;
+            text3.Size = 12;
+            cell.RichText.Add("\n");
+            var text4 = cell.RichText.Add("Website: www.dmpmachinery.vn - Email: info @dmpmachinery.vn");
+            text4.Bold = false;
+            text4.Size = 12;
+
+            worksheet.Cells[7, 1, 8, 13].Merge = true;
+            worksheet.Cells[7, 1].Value = "DANH MỤC VẬT TƯ";
+            worksheet.Cells[7, 1].Style.Font.Bold = true;
+            worksheet.Cells[7, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[7, 1].Style.Font.Size = 20;
+            worksheet.Cells[7, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[7, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+
+            worksheet.Cells[9, 1, 9, 13].Merge = true;
+            worksheet.Cells[9, 1].Value = "Tên dự án: ";
+            worksheet.Cells[9, 1].Style.Font.Bold = true;
+            worksheet.Cells[9, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[9, 1].Style.Font.Size = 12;
+
+            worksheet.Cells[10, 1, 10, 13].Merge = true;
+            worksheet.Cells[10, 1].Value = "Mã dự án: ";
+            worksheet.Cells[10, 1].Style.Font.Bold = true;
+            worksheet.Cells[10, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[10, 1].Style.Font.Size = 12;
+
+            worksheet.Cells[11, 1, 11, 13].Merge = true;
+            worksheet.Cells[11, 1].Value = "Mã thiết kế: ";
+            worksheet.Cells[11, 1].Style.Font.Bold = true;
+            worksheet.Cells[11, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[11, 1].Style.Font.Size = 12;
+
+            worksheet.Cells[12, 1, 12, 13].Merge = true;
+            worksheet.Cells[12, 1].Value = "Thiết kế cơ sở: ";
+            worksheet.Cells[12, 1].Style.Font.Bold = true;
+            worksheet.Cells[12, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[12, 1].Style.Font.Size = 12;
+
+            worksheet.Cells[13, 1, 13, 13].Merge = true;
+            worksheet.Cells[13, 1].Value = "Thiết kế điện: ";
+            worksheet.Cells[13, 1].Style.Font.Bold = true;
+            worksheet.Cells[13, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[13, 1].Style.Font.Size = 12;
+        }
+
+        private void CreateSheetTHVT(ExcelWorksheet worksheet, List<VttbModel> data)
+        {
+            var tmpMaterial = (from t1 in data
+                               where t1.IsMaterial == 1 && t1.IsWelding == 0
+                               group t1 by new { t1.Title, t1.PartNumber, t1.Category, t1.Company } into x1
+                               select new VttbGroupModel
+                               {
+                                   Title = x1.Key.Title,
+                                   PartNumber = x1.Key.PartNumber,
+                                   Category = x1.Key.Category,
+                                   Company = x1.Key.Company,
+                                   Quantity = x1.Sum(z => z.Quantity)
+                               })
+                               .ToList();
+
+            var row = 1;
+            worksheet.Cells[row, 1].Value = "STT";
+            worksheet.Cells[row, 2].Value = "TÊN VẬT TƯ";
+            worksheet.Cells[row, 3].Value = "MÃ VẬT TƯ";
+            worksheet.Cells[row, 4].Value = "THÔNG SỐ";
+            worksheet.Cells[row, 5].Value = "ĐV";
+            worksheet.Cells[row, 6].Value = "SỐ LƯỢNG";
+            worksheet.Cells[row, 7].Value = "TỔNG SL";
+            worksheet.Cells[row, 8].Value = "VẬT LIỆU";
+            worksheet.Cells[row, 9].Value = "KHỐI LƯỢNG";
+            worksheet.Cells[row, 10].Value = "HÃNG SX";
+            worksheet.Cells[row, 11].Value = "ĐƠN GIÁ";
+            worksheet.Cells[row, 12].Value = "THÀNH TIỀN";
+            worksheet.Cells[row, 13].Value = "GHI CHÚ";
+
+            //row = 2;
+            //worksheet.Cells[row, 1].Value = "Item";
+            //worksheet.Cells[row, 2].Value = "Title";
+            //worksheet.Cells[row, 3].Value = "PartNumber";
+            //worksheet.Cells[row, 4].Value = "Category";
+            //worksheet.Cells[row, 5].Value = "Manager";
+            //worksheet.Cells[row, 6].Value = "QTY";
+            //worksheet.Cells[row, 7].Value = "";//Quantity
+            //worksheet.Cells[row, 8].Value = "Material";
+            //worksheet.Cells[row, 9].Value = "Mass";
+            //worksheet.Cells[row, 10].Value = "Company";
+
+            foreach (var item in tmpMaterial)
+            {
+                row++;
+                worksheet.Cells[row, 2].Value = item.Title;
+                worksheet.Cells[row, 3].Value = item.PartNumber;
+                worksheet.Cells[row, 4].Value = item.Category;
+                worksheet.Cells[row, 7].Value = item.Quantity;
+                worksheet.Cells[row, 10].Value = item.Company;
+            }
+
+            //Style
+
+            worksheet.Column(1).Width = 6;
+            worksheet.Column(2).Width = 40;
+            worksheet.Column(3).Width = 30;
+            worksheet.Column(4).Width = 20;
+            worksheet.Column(5).Width = 10;
+            worksheet.Column(6).Width = 15;
+            worksheet.Column(7).Width = 15;
+            worksheet.Column(8).Width = 15;
+            worksheet.Column(9).Width = 20;
+            worksheet.Column(10).Width = 12;
+            worksheet.Column(11).Width = 10;
+            worksheet.Column(12).Width = 20;
+            worksheet.Column(13).Width = 10;
+
+            var cells = worksheet.Cells[1, 1, row, 13];
+            cells.Style.Font.Name = "Times New Roman";
+            cells.Style.Font.Size = 12;
+            cells.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
+            cells = worksheet.Cells[1, 1, 1, 13];
+            cells.Style.Font.Bold = true;
+            cells.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            cells.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+        }
+
+        private void CreateSheetHAN(ExcelWorksheet worksheet, List<VttbModel> data)
+        {
+            var tmpWelding = (from t in data
+                              where t.IsWelding == 1
+                              select t).ToList();
+
+            var row = 1;
+            worksheet.Cells[row, 1].Value = "STT";
+            worksheet.Cells[row, 2].Value = "TÊN VẬT TƯ";
+            worksheet.Cells[row, 3].Value = "MÃ VẬT TƯ";
+            worksheet.Cells[row, 4].Value = "THÔNG SỐ";
+            worksheet.Cells[row, 5].Value = "ĐV";
+            worksheet.Cells[row, 6].Value = "SỐ LƯỢNG";
+            worksheet.Cells[row, 7].Value = "TỔNG SL";
+            worksheet.Cells[row, 8].Value = "VẬT LIỆU";
+            worksheet.Cells[row, 9].Value = "KHỐI LƯỢNG";
+            worksheet.Cells[row, 10].Value = "HÃNG SX";
+            worksheet.Cells[row, 11].Value = "ĐƠN GIÁ";
+            worksheet.Cells[row, 12].Value = "THÀNH TIỀN";
+            worksheet.Cells[row, 13].Value = "GHI CHÚ";
+
+            //row = 2;
+            //worksheet.Cells[row, 1].Value = "Item";
+            //worksheet.Cells[row, 2].Value = "Title";
+            //worksheet.Cells[row, 3].Value = "PartNumber";
+            //worksheet.Cells[row, 4].Value = "Category";
+            //worksheet.Cells[row, 5].Value = "Manager";
+            //worksheet.Cells[row, 6].Value = "QTY";
+            //worksheet.Cells[row, 7].Value = "";//Quantity
+            //worksheet.Cells[row, 8].Value = "Material";
+            //worksheet.Cells[row, 9].Value = "Mass";
+            //worksheet.Cells[row, 10].Value = "Company";
+
+            foreach (var item in tmpWelding)
+            {
+                row++;
+                worksheet.Cells[row, 1].Value = item.Item;
+                worksheet.Cells[row, 2].Value = item.Title;
+                worksheet.Cells[row, 3].Value = item.PartNumber;
+                worksheet.Cells[row, 4].Value = item.Category;
+                worksheet.Cells[row, 5].Value = item.Manager;
+                worksheet.Cells[row, 6].Value = item.QTY;
+                worksheet.Cells[row, 7].Value = item.Quantity;
+                worksheet.Cells[row, 8].Value = item.Material;
+                worksheet.Cells[row, 9].Value = item.Mass;
+                worksheet.Cells[row, 10].Value = item.Company;
+            }
+
+            //Style
+
+            worksheet.Column(1).Width = 6;
+            worksheet.Column(2).Width = 40;
+            worksheet.Column(3).Width = 30;
+            worksheet.Column(4).Width = 20;
+            worksheet.Column(5).Width = 10;
+            worksheet.Column(6).Width = 15;
+            worksheet.Column(7).Width = 15;
+            worksheet.Column(8).Width = 15;
+            worksheet.Column(9).Width = 20;
+            worksheet.Column(10).Width = 12;
+            worksheet.Column(11).Width = 10;
+            worksheet.Column(12).Width = 20;
+            worksheet.Column(13).Width = 10;
+
+            var cells = worksheet.Cells[1, 1, row, 13];
+            cells.Style.Font.Name = "Times New Roman";
+            cells.Style.Font.Size = 12;
+            cells.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
+            cells = worksheet.Cells[1, 1, 1, 13];
+            cells.Style.Font.Bold = true;
+            cells.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            cells.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+        }
+
+        private void CreateSheetDMP(ExcelWorksheet worksheet, List<VttbModel> data)
+        {
+            var tmpWelding = (from t in data
+                              where t.Company.ToUpper() == "DMP" && t.Category.ToUpper() != "HÀN"
+                              select t).ToList();
+
+            var row = 1;
+            worksheet.Cells[row, 1].Value = "STT";
+            worksheet.Cells[row, 2].Value = "TÊN VẬT TƯ";
+            worksheet.Cells[row, 3].Value = "MÃ VẬT TƯ";
+            worksheet.Cells[row, 4].Value = "THÔNG SỐ";
+            worksheet.Cells[row, 5].Value = "ĐV";
+            worksheet.Cells[row, 6].Value = "SỐ LƯỢNG";
+            worksheet.Cells[row, 7].Value = "TỔNG SL";
+            worksheet.Cells[row, 8].Value = "VẬT LIỆU";
+            worksheet.Cells[row, 9].Value = "KHỐI LƯỢNG";
+            worksheet.Cells[row, 10].Value = "HÃNG SX";
+            worksheet.Cells[row, 11].Value = "ĐƠN GIÁ";
+            worksheet.Cells[row, 12].Value = "THÀNH TIỀN";
+            worksheet.Cells[row, 13].Value = "GHI CHÚ";
+
+            //row = 2;
+            //worksheet.Cells[row, 1].Value = "Item";
+            //worksheet.Cells[row, 2].Value = "Title";
+            //worksheet.Cells[row, 3].Value = "PartNumber";
+            //worksheet.Cells[row, 4].Value = "Category";
+            //worksheet.Cells[row, 5].Value = "Manager";
+            //worksheet.Cells[row, 6].Value = "QTY";
+            //worksheet.Cells[row, 7].Value = "";//Quantity
+            //worksheet.Cells[row, 8].Value = "Material";
+            //worksheet.Cells[row, 9].Value = "Mass";
+            //worksheet.Cells[row, 10].Value = "Company";
+
+            foreach (var item in tmpWelding)
+            {
+                row++;
+                worksheet.Cells[row, 1].Value = item.Item;
+                worksheet.Cells[row, 2].Value = item.Title;
+                worksheet.Cells[row, 3].Value = item.PartNumber;
+                worksheet.Cells[row, 4].Value = item.Category;
+                worksheet.Cells[row, 5].Value = item.Manager;
+                worksheet.Cells[row, 6].Value = item.QTY;
+                worksheet.Cells[row, 7].Value = item.Quantity;
+                worksheet.Cells[row, 8].Value = item.Material;
+                worksheet.Cells[row, 9].Value = item.Mass;
+                worksheet.Cells[row, 10].Value = item.Company;
+            }
+
+            //Style
+
+            worksheet.Column(1).Width = 6;
+            worksheet.Column(2).Width = 40;
+            worksheet.Column(3).Width = 30;
+            worksheet.Column(4).Width = 20;
+            worksheet.Column(5).Width = 10;
+            worksheet.Column(6).Width = 15;
+            worksheet.Column(7).Width = 15;
+            worksheet.Column(8).Width = 15;
+            worksheet.Column(9).Width = 20;
+            worksheet.Column(10).Width = 12;
+            worksheet.Column(11).Width = 10;
+            worksheet.Column(12).Width = 20;
+            worksheet.Column(13).Width = 10;
+
+            var cells = worksheet.Cells[1, 1, row, 13];
+            cells.Style.Font.Name = "Times New Roman";
+            cells.Style.Font.Size = 12;
+            cells.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+            cells.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+
+            cells = worksheet.Cells[1, 1, 1, 13];
+            cells.Style.Font.Bold = true;
+            cells.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            cells.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
         }
     }
 }
