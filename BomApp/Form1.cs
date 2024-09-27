@@ -216,10 +216,13 @@ namespace BomApp
                 worksheet.Cells[row, 7].Value = item.Quantity;
                 worksheet.Cells[row, 8].Value = item.Material;
                 worksheet.Cells[row, 9].Value = item.Mass;
-                worksheet.Cells[row, 9].Value = item.Mass;
                 worksheet.Cells[row, 10].Value = item.Company;
                 worksheet.Cells[row, 12].Formula = $"K{row}*G{row}";
             }
+
+            int rowSign = row + 2;
+            worksheet.Cells[rowSign, 2].Value = "NGƯỜI LẬP";
+            worksheet.Cells[rowSign, 11].Value = "NGƯỜI DUYỆT";
 
             //Style
 
@@ -258,6 +261,7 @@ namespace BomApp
             picture.SetSize(250, 100); // Chiều rộng 100px, chiều cao 100px
 
             worksheet.Cells[2, 1, 6, 13].Merge = true;
+            worksheet.Cells[2, 1, 6, 13].Style.WrapText = true;
             var cell = worksheet.Cells[2, 1];
             cell.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
             cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
@@ -277,7 +281,7 @@ namespace BomApp
             text3.Bold = false;
             text3.Size = 12;
             cell.RichText.Add("\n");
-            var text4 = cell.RichText.Add("Website: www.dmpmachinery.vn - Email: info @dmpmachinery.vn");
+            var text4 = cell.RichText.Add("Website: www.dmpmachinery.vn - Email: info@dmpmachinery.vn");
             text4.Bold = false;
             text4.Size = 12;
 
@@ -308,7 +312,7 @@ namespace BomApp
             worksheet.Cells[11, 1].Style.Font.Size = 12;
 
             worksheet.Cells[12, 1, 12, 13].Merge = true;
-            worksheet.Cells[12, 1].Value = "Thiết kế cơ sở: ";
+            worksheet.Cells[12, 1].Value = "Thiết kế cơ: ";
             worksheet.Cells[12, 1].Style.Font.Bold = true;
             worksheet.Cells[12, 1].Style.Font.Name = "Times New Roman";
             worksheet.Cells[12, 1].Style.Font.Size = 12;
@@ -318,6 +322,12 @@ namespace BomApp
             worksheet.Cells[13, 1].Style.Font.Bold = true;
             worksheet.Cells[13, 1].Style.Font.Name = "Times New Roman";
             worksheet.Cells[13, 1].Style.Font.Size = 12;
+
+            //--Sign
+            cells = worksheet.Cells[rowSign, 1, rowSign, 12];
+            cells.Style.Font.Bold = true;
+            cells.Style.Font.Size = 12;
+            cells.Style.Font.Name = "Times New Roman";
         }
 
         private void CreateSheetTHVT(ExcelWorksheet worksheet, List<VttbModel> data)
@@ -335,7 +345,7 @@ namespace BomApp
                                })
                                .ToList();
 
-            var row = 1;
+            var row = 15;
             worksheet.Cells[row, 1].Value = "STT";
             worksheet.Cells[row, 2].Value = "TÊN VẬT TƯ";
             worksheet.Cells[row, 3].Value = "MÃ VẬT TƯ";
@@ -372,6 +382,10 @@ namespace BomApp
                 worksheet.Cells[row, 10].Value = item.Company;
             }
 
+            int rowSign = row + 2;
+            worksheet.Cells[rowSign, 2].Value = "NGƯỜI LẬP";
+            worksheet.Cells[rowSign, 11].Value = "NGƯỜI DUYỆT";
+
             //Style
 
             worksheet.Column(1).Width = 6;
@@ -388,7 +402,7 @@ namespace BomApp
             worksheet.Column(12).Width = 20;
             worksheet.Column(13).Width = 10;
 
-            var cells = worksheet.Cells[1, 1, row, 13];
+            var cells = worksheet.Cells[15, 1, row, 13];
             cells.Style.Font.Name = "Times New Roman";
             cells.Style.Font.Size = 12;
             cells.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
@@ -396,10 +410,86 @@ namespace BomApp
             cells.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
             cells.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
 
-            cells = worksheet.Cells[1, 1, 1, 13];
+            cells = worksheet.Cells[15, 1, 15, 13];
             cells.Style.Font.Bold = true;
             cells.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
             cells.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+
+            //--Title
+
+            var imagePath = "assets\\logo_dmp.jpg";
+            var picture = worksheet.Drawings.AddPicture("MyPicture", imagePath);
+            picture.SetPosition(1, 0, 0, 0); // Dòng 2 (index 1), Cột 1 (index 0)
+            picture.SetSize(250, 100); // Chiều rộng 100px, chiều cao 100px
+
+            worksheet.Cells[2, 1, 6, 13].Merge = true;
+            worksheet.Cells[2, 1, 6, 13].Style.WrapText = true;
+            var cell = worksheet.Cells[2, 1];
+            cell.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+            cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            cell.Style.Font.Name = "Times New Roman";
+            cell.Style.Font.Size = 12;
+
+            cell.Value = null;
+            var text1 = cell.RichText.Add("CÔNG TY TNHH DMP MACHINERY");
+            text1.Bold = true;
+            text1.Size = 20;
+            cell.RichText.Add("\n");
+            var text2 = cell.RichText.Add("Địa chỉ: Số Nhà 25 Ngách 193 / 15 Phố Cầu Cốc, P.Tây Mỗ, Q. Nam Từ Liêm, TP.Hà Nội");
+            text2.Bold = false;
+            text2.Size = 12;
+            cell.RichText.Add("\n");
+            var text3 = cell.RichText.Add("Hotline: 0973992528");
+            text3.Bold = false;
+            text3.Size = 12;
+            cell.RichText.Add("\n");
+            var text4 = cell.RichText.Add("Website: www.dmpmachinery.vn - Email: info@dmpmachinery.vn");
+            text4.Bold = false;
+            text4.Size = 12;
+
+            worksheet.Cells[7, 1, 8, 13].Merge = true;
+            worksheet.Cells[7, 1].Value = "TỔNG HỢP VẬT TƯ";
+            worksheet.Cells[7, 1].Style.Font.Bold = true;
+            worksheet.Cells[7, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[7, 1].Style.Font.Size = 20;
+            worksheet.Cells[7, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[7, 1].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+
+            worksheet.Cells[9, 1, 9, 13].Merge = true;
+            worksheet.Cells[9, 1].Value = "Tên dự án: ";
+            worksheet.Cells[9, 1].Style.Font.Bold = true;
+            worksheet.Cells[9, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[9, 1].Style.Font.Size = 12;
+
+            worksheet.Cells[10, 1, 10, 13].Merge = true;
+            worksheet.Cells[10, 1].Value = "Mã dự án: ";
+            worksheet.Cells[10, 1].Style.Font.Bold = true;
+            worksheet.Cells[10, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[10, 1].Style.Font.Size = 12;
+
+            worksheet.Cells[11, 1, 11, 13].Merge = true;
+            worksheet.Cells[11, 1].Value = "Mã thiết kế: ";
+            worksheet.Cells[11, 1].Style.Font.Bold = true;
+            worksheet.Cells[11, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[11, 1].Style.Font.Size = 12;
+
+            worksheet.Cells[12, 1, 12, 13].Merge = true;
+            worksheet.Cells[12, 1].Value = "Thiết kế cơ: ";
+            worksheet.Cells[12, 1].Style.Font.Bold = true;
+            worksheet.Cells[12, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[12, 1].Style.Font.Size = 12;
+
+            worksheet.Cells[13, 1, 13, 13].Merge = true;
+            worksheet.Cells[13, 1].Value = "Thiết kế điện: ";
+            worksheet.Cells[13, 1].Style.Font.Bold = true;
+            worksheet.Cells[13, 1].Style.Font.Name = "Times New Roman";
+            worksheet.Cells[13, 1].Style.Font.Size = 12;
+
+            //--Sign
+            cells = worksheet.Cells[rowSign, 1, rowSign, 12];
+            cells.Style.Font.Bold = true;
+            cells.Style.Font.Size = 12;
+            cells.Style.Font.Name = "Times New Roman";
         }
 
         private void CreateSheetHAN(ExcelWorksheet worksheet, List<VttbModel> data)
@@ -483,7 +573,7 @@ namespace BomApp
         private void CreateSheetDMP(ExcelWorksheet worksheet, List<VttbModel> data)
         {
             var tmpWelding = (from t in data
-                              where t.Company.ToUpper() == "DMP" && t.Category.ToUpper() != "HÀN"
+                              where t.IsWelding == 0 && t.Company.ToUpper() == "DMP"
                               select t).ToList();
 
             var row = 1;
