@@ -92,6 +92,8 @@ namespace BomApp
                             int? Quantity = 0;
                             int IsMaterial = 0;
                             int IsWelding = 0;
+                            int IsWeldingRoot = 0;
+                            string WeldingGroup = "";
 
                             string Item = worksheet.Cells[row, 1].Value?.ToString();
                             string Category = worksheet.Cells[row, 3].Value?.ToString();
@@ -105,9 +107,14 @@ namespace BomApp
 
                             if (pItem == Item)
                             {
+                                //--Gap dong dau tien la HAN
                                 Quantity = int.Parse(QTY);
                                 if (Category.ToUpper() == "HÀN")
+                                {
                                     IsWelding = 1;
+                                    IsWeldingRoot = 1;
+                                    WeldingGroup = "G" + row.ToString();
+                                }
                             }
                             else
                             {
@@ -116,11 +123,23 @@ namespace BomApp
                                 Quantity = int.Parse(QTY) * tmpItem?.Quantity;
 
                                 if (Category.ToUpper() == "HÀN")
+                                {
                                     IsWelding = 1;
-                                else if (tmpItem?.Category.ToUpper() == "HÀN")
+                                    if (tmpItem?.IsWelding == 0)
+                                    {
+                                        IsWeldingRoot = 1;
+                                        WeldingGroup = "G" + row.ToString();
+                                    }
+                                    else
+                                    {
+                                        WeldingGroup = tmpItem.WeldingGroup;
+                                    }
+                                }
+                                else if (tmpItem?.IsWelding == 1)//(tmpItem?.Category.ToUpper() == "HÀN")
+                                {
                                     IsWelding = 1;
-                                else
-                                    IsWelding = 0;
+                                    WeldingGroup = tmpItem.WeldingGroup;
+                                }
                             }
 
                             CountChild = data.Where(x => x.Item.StartsWith(Item + ".")).Count();
@@ -133,10 +152,13 @@ namespace BomApp
                             t.Quantity = Quantity;
                             t.IsMaterial = IsMaterial;
                             t.IsWelding = IsWelding;
+                            t.IsWeldingRoot = IsWeldingRoot;
+                            t.WeldingGroup = WeldingGroup;
 
                             worksheet.Cells[row, 12].Value = Quantity;
                             //worksheet.Cells[row, 13].Value = IsMaterial;
                             //worksheet.Cells[row, 14].Value = IsWelding;
+                            //worksheet.Cells[row, 15].Value = WeldingGroup;
                         }
 
                         //II. DMVT
@@ -174,6 +196,8 @@ namespace BomApp
 
         private void CreateSheetDMVT(ExcelWorksheet worksheet, List<VttbModel> data)
         {
+            //DM: Lay toan bo danh muc voi tong so luong
+
             var tmpWelding = (from t in data
                               select t).ToList();
 
@@ -191,6 +215,12 @@ namespace BomApp
             worksheet.Cells[row, 11].Value = "ĐƠN GIÁ";
             worksheet.Cells[row, 12].Value = "THÀNH TIỀN";
             worksheet.Cells[row, 13].Value = "GHI CHÚ";
+
+            ////--Hien thi de kiem tra
+            //worksheet.Cells[row, 14].Value = "IsMaterial";
+            //worksheet.Cells[row, 15].Value = "IsWelding";
+            //worksheet.Cells[row, 16].Value = "IsWeldingRoot";
+            //worksheet.Cells[row, 17].Value = "WeldingGroup";
 
             //row = 16;
             //worksheet.Cells[row, 1].Value = "Item";
@@ -218,6 +248,12 @@ namespace BomApp
                 worksheet.Cells[row, 9].Value = item.Mass;
                 worksheet.Cells[row, 10].Value = item.Company;
                 worksheet.Cells[row, 12].Formula = $"K{row}*G{row}";
+
+                ////--Hien thi de kiem tra
+                //worksheet.Cells[row, 14].Value = item.IsMaterial;
+                //worksheet.Cells[row, 15].Value = item.IsWelding;
+                //worksheet.Cells[row, 16].Value = item.IsWeldingRoot;
+                //worksheet.Cells[row, 17].Value = item.WeldingGroup;
             }
 
             int rowSign = row + 2;
@@ -332,15 +368,19 @@ namespace BomApp
 
         private void CreateSheetTHVT(ExcelWorksheet worksheet, List<VttbModel> data)
         {
+            //DM: Lay toan bo VAT Tu khong bao gom HAN va dau muc ROOT cua cac cum HAN
+
             var tmpMaterial = (from t1 in data
-                               where t1.IsMaterial == 1 && t1.IsWelding == 0
-                               group t1 by new { t1.Title, t1.PartNumber, t1.Category, t1.Company } into x1
+                               where (t1.IsMaterial == 1 && t1.IsWelding == 0) || (t1.IsWelding == 1 && t1.IsWeldingRoot == 1)
+                               group t1 by new { t1.Title, t1.PartNumber, t1.Category, t1.Manager, t1.Company } into x1
                                select new VttbGroupModel
                                {
                                    Title = x1.Key.Title,
                                    PartNumber = x1.Key.PartNumber,
                                    Category = x1.Key.Category,
+                                   Manager = x1.Key.Manager,
                                    Company = x1.Key.Company,
+                                   QTY = x1.Sum(z => z.QTY),
                                    Quantity = x1.Sum(z => z.Quantity)
                                })
                                .ToList();
@@ -378,6 +418,8 @@ namespace BomApp
                 worksheet.Cells[row, 2].Value = item.Title;
                 worksheet.Cells[row, 3].Value = item.PartNumber;
                 worksheet.Cells[row, 4].Value = item.Category;
+                worksheet.Cells[row, 5].Value = item.Manager;
+                worksheet.Cells[row, 6].Value = item.QTY;
                 worksheet.Cells[row, 7].Value = item.Quantity;
                 worksheet.Cells[row, 10].Value = item.Company;
             }
@@ -494,9 +536,26 @@ namespace BomApp
 
         private void CreateSheetHAN(ExcelWorksheet worksheet, List<VttbModel> data)
         {
-            var tmpWelding = (from t in data
-                              where t.IsWelding == 1
-                              select t).ToList();
+            //DM: Lấy toàn bộ cụm HÀN, có SUM số lượng trong cùng 1 cụm, hiển thị cả cột Item (STT)
+
+            //var tmpWelding = (from t in data
+            //                  where t.IsWelding == 1
+            //                  select t).ToList();
+            var tmpWelding = (from t1 in data
+                              where t1.IsWelding == 1
+                              group t1 by new { t1.WeldingGroup, t1.Title, t1.PartNumber, t1.Category, t1.Manager, t1.Company } into x1
+                              select new VttbGroupModel
+                              {
+                                  Item = x1.First().Item,
+                                  Title = x1.Key.Title,
+                                  PartNumber = x1.Key.PartNumber,
+                                  Category = x1.Key.Category,
+                                  Manager = x1.Key.Manager,
+                                  Company = x1.Key.Company,
+                                  QTY = x1.Sum(z => z.QTY),
+                                  Quantity = x1.Sum(z => z.Quantity)
+                              })
+                              .ToList();
 
             var row = 1;
             worksheet.Cells[row, 1].Value = "STT";
@@ -528,6 +587,7 @@ namespace BomApp
             foreach (var item in tmpWelding)
             {
                 row++;
+                //var firstItem = data.Where(t => t.PartNumber == item.PartNumber).FirstOrDefault();
                 worksheet.Cells[row, 1].Value = item.Item;
                 worksheet.Cells[row, 2].Value = item.Title;
                 worksheet.Cells[row, 3].Value = item.PartNumber;
@@ -535,8 +595,8 @@ namespace BomApp
                 worksheet.Cells[row, 5].Value = item.Manager;
                 worksheet.Cells[row, 6].Value = item.QTY;
                 worksheet.Cells[row, 7].Value = item.Quantity;
-                worksheet.Cells[row, 8].Value = item.Material;
-                worksheet.Cells[row, 9].Value = item.Mass;
+                //worksheet.Cells[row, 8].Value = item.Material;
+                //worksheet.Cells[row, 9].Value = item.Mass;
                 worksheet.Cells[row, 10].Value = item.Company;
             }
 
@@ -572,9 +632,25 @@ namespace BomApp
 
         private void CreateSheetDMP(ExcelWorksheet worksheet, List<VttbModel> data)
         {
-            var tmpWelding = (from t in data
-                              where t.IsWelding == 0 && t.Company.ToUpper() == "DMP"
-                              select t).ToList();
+            //DM: Lấy toàn bộ cụm DMP và đơn vị tính là CÁI, có SUM số lượng theo PartNumber (Mã Vật Tư), không cần hiển thị cột Item (STT)
+
+            //var tmpWelding = (from t in data
+            //                  where t.IsWelding == 0 && t.Company.ToUpper() == "DMP" && t.Manager.ToUpper() == "CÁI"
+            //                  select t).ToList();
+            var tmpWelding = (from t1 in data
+                              where t1.IsWelding == 0 && t1.Company.ToUpper() == "DMP" && t1.Manager.ToUpper() == "CÁI"
+                              group t1 by new { t1.Title, t1.PartNumber, t1.Category, t1.Manager, t1.Company } into x1
+                              select new VttbGroupModel
+                              {
+                                  Title = x1.Key.Title,
+                                  PartNumber = x1.Key.PartNumber,
+                                  Category = x1.Key.Category,
+                                  Manager = x1.Key.Manager,
+                                  Company = x1.Key.Company,
+                                  QTY = x1.Sum(z => z.QTY),
+                                  Quantity = x1.Sum(z => z.Quantity)
+                              })
+                              .ToList();
 
             var row = 1;
             worksheet.Cells[row, 1].Value = "STT";
@@ -606,15 +682,15 @@ namespace BomApp
             foreach (var item in tmpWelding)
             {
                 row++;
-                worksheet.Cells[row, 1].Value = item.Item;
+                //worksheet.Cells[row, 1].Value = item.Item;
                 worksheet.Cells[row, 2].Value = item.Title;
                 worksheet.Cells[row, 3].Value = item.PartNumber;
                 worksheet.Cells[row, 4].Value = item.Category;
                 worksheet.Cells[row, 5].Value = item.Manager;
                 worksheet.Cells[row, 6].Value = item.QTY;
                 worksheet.Cells[row, 7].Value = item.Quantity;
-                worksheet.Cells[row, 8].Value = item.Material;
-                worksheet.Cells[row, 9].Value = item.Mass;
+                //worksheet.Cells[row, 8].Value = item.Material;
+                //worksheet.Cells[row, 9].Value = item.Mass;
                 worksheet.Cells[row, 10].Value = item.Company;
             }
 
